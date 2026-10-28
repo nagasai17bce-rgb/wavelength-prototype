@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavelength — Intent-First Dating Prototype</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            terracotta: '#D96B43',
+                            gold: '#E5A93C',
+                            rose: '#E87A90',
+                            darkBg: '#0F0D13',
+                            darkCard: '#1A1622',
+                            darkBorder: '#2D2738'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F0D13;
+            color: #F3F4F6;
+        }
+        .glass-panel {
+            background: rgba(26, 22, 34, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(35, 29, 46, 0.8) 0%, rgba(20, 17, 26, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(217, 107, 67, 0.2);
+        }
+        .glow-accent {
+            box-shadow: 0 0 20px rgba(217, 107, 67, 0.25);
+        }
+        .waveform-bar {
+            animation: pulseWave 1.2s ease-in-out infinite alternate;
+        }
+        @keyframes pulseWave {
+            0% { height: 15%; opacity: 0.4; }
+            100% { height: 100%; opacity: 1; }
+        }
+        /* Hide scrollbars for slick look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start pb-24 md:pb-12 bg-[#0F0D13] text-gray-100 selection:bg-brand-terracotta selection:text-white">
+
+    <!-- APP WRAPPER (MOBILE FRAME SIMULATION) -->
+    <div class="w-full max-w-md min-h-screen md:min-h-[880px] md:my-6 md:rounded-3xl md:border md:border-brand-darkBorder bg-[#0F0D13] flex flex-col overflow-hidden shadow-2xl relative">
+
+        <!-- TOP BAR / HEADER -->
+        <header class="sticky top-0 z-30 glass-panel px-5 py-3 flex items-center justify-between border-b border-white/10">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-terracotta via-brand-gold to-brand-rose flex items-center justify-center font-bold text-white shadow-md">
+                    W
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none bg-gradient-to-r from-brand-gold via-brand-rose to-brand-terracotta bg-clip-text text-transparent">Wavelength</h1>
+                    <span class="text-[10px] text-gray-400 font-medium tracking-wide uppercase">Intent-First • India</span>
+                </div>
+            </div>
+
+            <!-- Active Match Queue Counter Limit -->
+            <div class="flex items-center space-x-2 bg-brand-darkCard px-3 py-1.5 rounded-full border border-brand-terracotta/30 shadow-inner">
+                <i class="fa-solid fa-users text-brand-gold text-xs"></i>
+                <div class="text-xs font-semibold">
+                    Matches: <span id="queue-count" class="text-brand-rose font-bold">2</span><span class="text-gray-400">/3 Max</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN VIEWPORT (TAB CONTENT) -->
+        <main class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-5">
+
+            <!-- DAILY 24-HR VIBE BOARD BAR -->
+            <section class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-rose animate-ping"></span>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-gray-300">Daily Vibe Board (24h)</h2>
+                    </div>
+                    <button onclick="openVibeModal()" class="text-xs text-brand-gold hover:underline font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Post Vibe
+                    </button>
+                </div>
+
+                <div class="flex space-x-3 overflow-x-auto no-scrollbar py-1">
+                    <!-- User's Vibe -->
+                    <div class="flex-none w-36 glass-panel rounded-xl p-2.5 border border-white/10 flex flex-col justify-between relative group hover:border-brand-terracotta/50 transition">
+                        <div class="flex items-center space-x-2">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-6 h-6 rounded-full object-cover border border-brand-rose" alt="You">
+                            <span class="text-[11px] font-semibold text-gray-300">You</span>
+                        </div>
+                        <p id="user-vibe-text" class="text-xs text-gray-200 mt-2 italic font-light">"Chai & Lo-fi beats after 7 PM ☕"</p>
+                        <div class="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                            <span class="text-brand-gold font-mono">18h left</span>
+                            <i class="fa-solid fa-music text-brand-rose text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- Active Personas Vibes -->
+                    <div class="flex-none w-36 glass-panel rounded-xl p-2.5 border border-white/10 flex flex-col justify-between hover:border-brand-terracotta/50 transition">
+                        <div class="flex items-center space-x-2">
+                            <img id="vibe-avatar-1" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" class="w-6 h-6 rounded-full object-cover border border-brand-gold" alt="Persona">
+                            <span id="vibe-name-1" class="text-[11px] font-semibold text-gray-200">Riya, 24</span>
+                        </div>
+                        <div class="mt-2 flex items-center space-x-1">
+                            <button onclick="toggleAudioPreview(this)" class="w-6 h-6 rounded-full bg-brand-terracotta/30 text-brand-gold flex items-center justify-center text-xs hover:bg-brand-terracotta">
+                                <i class="fa-solid fa-play text-[10px]"></i>
+                            </button>
+                            <div class="flex items-center space-x-0.5 h-4 flex-1">
+                                <div class="w-1 bg-brand-gold rounded-full waveform-bar" style="animation-delay: 0.1s"></div>
+                                <div class="w-1 bg-brand-rose rounded-full waveform-bar" style="animation-delay: 0.3s"></div>
+                                <div class="w-1 bg-brand-terracotta rounded-full waveform-bar" style="animation-delay: 0.2s"></div>
+                                <div class="w-1 bg-brand-gold rounded-full waveform-bar" style="animation-delay: 0.4s"></div>
+                                <div class="w-1 bg-brand-rose rounded-full waveform-bar" style="animation-delay: 0.15s"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-gray-400 mt-1 block font-mono">Voice Note • 0:14</span>
+                    </div>
+
+                    <div class="flex-none w-36 glass-panel rounded-xl p-2.5 border border-white/10 flex flex-col justify-between hover:border-brand-terracotta/50 transition">
+                        <div class="flex items-center space-x-2">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" class="w-6 h-6 rounded-full object-cover border border-brand-terracotta" alt="Persona">
+                            <span class="text-[11px] font-semibold text-gray-200">Anand, 27</span>
+                        </div>
+                        <p class="text-xs text-gray-200 mt-2 italic">"Filter coffee > Cappuccino. Prove me wrong."</p>
+                        <div class="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                            <span class="text-brand-terracotta font-mono">12h left</span>
+                            <i class="fa-solid fa-mug-hot text-brand-gold text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: MATCH DISCOVERY / PROFILE CARD -->
+            <div id="tab-discovery" class="space-y-4">
+                
+                <!-- PROFILE CARD -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-xl border border-white/10 relative">
+                    <!-- Profile Image with Carousel Gradient Overlay -->
+                    <div class="relative h-96 w-full">
+                        <img id="profile-img" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80" class="w-full h-full object-cover" alt="Match Profile">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0F0D13] via-transparent to-black/30"></div>
+                        
+                        <!-- ID Verification Badge -->
+                        <div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-green-500/40 flex items-center space-x-1.5 shadow-md">
+                            <i class="fa-solid fa-shield-halved text-green-400 text-xs"></i>
+                            <span class="text-[11px] font-medium text-green-300">Aadhaar Verified</span>
+                        </div>
+
+                        <!-- Match Compatibility % -->
+                        <div class="absolute top-3 right-3 bg-brand-terracotta/90 backdrop-blur-md px-3 py-1 rounded-full text-white font-bold text-xs tracking-wide shadow-lg border border-white/20">
+                            <i class="fa-solid fa-bolt text-brand-gold mr-1"></i> <span id="profile-vibe-score">89%</span> Vibe
+                        </div>
+
+                        <!-- Profile Basic Info Header Overlay -->
+                        <div class="absolute bottom-3 left-4 right-4">
+                            <div class="flex items-end justify-between">
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <h3 id="profile-name-age" class="text-2xl font-bold text-white">Riya, 24</h3>
+                                        <span id="profile-intent-badge" class="bg-brand-gold/20 border border-brand-gold/50 text-brand-gold text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                            💍 Marriage-Minded
+                                        </span>
+                                    </div>
+                                    <p id="profile-location-job" class="text-xs text-gray-300 font-medium mt-0.5">
+                                        <i class="fa-solid fa-location-dot text-brand-rose mr-1"></i> UX Designer • Chennai
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROFILE DETAILS & TRADITIONAL TRUST SIGNALS -->
+                    <div class="p-4 space-y-4 bg-brand-darkCard/90">
+                        
+                        <!-- SIBLING VOUCH CARD (TRADITIONAL TRUST SIGNAL) -->
+                        <div class="bg-gradient-to-r from-brand-terracotta/15 via-brand-rose/10 to-transparent p-3 rounded-xl border-l-4 border-brand-terracotta relative">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fa-solid fa-award text-brand-gold text-sm"></i>
+                                <span class="text-xs font-bold uppercase tracking-wider text-brand-gold">Sibling Vouch Note</span>
+                            </div>
+                            <p id="profile-vouch-text" class="text-xs text-gray-200 italic leading-relaxed">
+                                "Vouched by Priya (Sister): 'Riya is fiercely kind, loves dogs, and is looking for a long-term partner who appreciates deep late-night chats.'"
+                            </p>
+                        </div>
+
+                        <!-- LIFESTYLE & SOCIAL TAGS -->
+                        <div class="space-y-1.5">
+                            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Social Alignment</span>
+                            <div id="profile-tags" class="flex flex-wrap gap-1.5">
+                                <span class="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-full"><i class="fa-solid fa-music text-brand-rose mr-1"></i> Anuv Jain</span>
+                                <span class="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-full"><i class="fa-solid fa-book text-brand-gold mr-1"></i> Murakami</span>
+                                <span class="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-full"><i class="fa-solid fa-leaf text-green-400 mr-1"></i> Vegetarian</span>
+                            </div>
+                        </div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <button onclick="startVoiceCallSimulation()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-terracotta to-brand-rose text-white font-semibold text-xs flex items-center justify-center space-x-2 shadow-lg hover:opacity-95 active:scale-95 transition">
+                                <i class="fa-solid fa-phone-volume"></i>
+                                <span>3-Min Audio Call</span>
+                            </button>
+                            <button onclick="switchTab('chat')" class="w-full py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-semibold text-xs flex items-center justify-center space-x-2 hover:bg-white/15 active:scale-95 transition">
+                                <i class="fa-solid fa-comments text-brand-gold"></i>
+                                <span>Message Match</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: ACTIVE CHAT & EQ SUITE -->
+            <div id="tab-chat" class="hidden space-y-3">
+                
+                <!-- CHAT HEADER & MATCH SUMMARY -->
+                <div class="glass-panel p-3 rounded-xl border border-white/10 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <img id="chat-header-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover border border-brand-gold" alt="Chat User">
+                            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-black"></span>
+                        </div>
+                        <div>
+                            <h3 id="chat-header-name" class="font-bold text-sm">Riya</h3>
+                            <span class="text-[10px] text-green-400 font-medium">EQ Radar: High Mutual Energy</span>
+                        </div>
+                    </div>
+                    <button onclick="openContactVault()" class="px-3 py-1.5 rounded-lg bg-brand-gold/20 border border-brand-gold/40 text-brand-gold text-xs font-semibold flex items-center space-x-1 hover:bg-brand-gold/30 transition">
+                        <i class="fa-solid fa-vault"></i>
+                        <span>Contact Vault</span>
+                    </button>
+                </div>
+
+                <!-- AUTOMATED DTR / CHECK-IN BANNER (3 DAYS CHAT) -->
+                <div class="bg-gradient-to-r from-brand-terracotta/20 via-brand-gold/20 to-transparent p-2.5 rounded-xl border border-brand-gold/30 flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-brand-gold"></i>
+                        <span class="text-gray-200">3 days of messaging! Ready to unlock the Contact Vault?</span>
+                    </div>
+                    <button onclick="openContactVault()" class="text-[11px] bg-brand-gold text-black font-bold px-2 py-1 rounded hover:bg-yellow-400">
+                        Unlock
+                    </button>
+                </div>
+
+                <!-- CHAT MESSAGES CONTAINER -->
+                <div id="chat-box" class="space-y-3 h-80 overflow-y-auto no-scrollbar p-2 glass-panel rounded-xl border border-white/5">
+                    
+                    <!-- System Prompt / Wave Wingman Suggestion -->
+                    <div class="flex justify-center my-1">
+                        <div class="bg-brand-rose/10 border border-brand-rose/30 text-brand-rose text-[11px] px-3 py-1.5 rounded-full flex items-center space-x-1.5">
+                            <i class="fa-solid fa-robot"></i>
+                            <span>AI Wingman "Wave" suggested: "Ask about her favorite filter coffee spot!"</span>
+                        </div>
+                    </div>
+
+                    <!-- Message Bubble Left -->
+                    <div class="flex flex-col items-start space-y-1">
+                        <div id="chat-msg-1" class="max-w-[80%] bg-brand-darkCard text-gray-200 text-xs p-3 rounded-2xl rounded-tl-none border border-white/10">
+                            Hey! I noticed your vibe post about lo-fi music. Big Anuv Jain fan? 🎵
+                        </div>
+                        <span class="text-[9px] text-gray-500 pl-1">10:42 AM</span>
+                    </div>
+
+                    <!-- Message Bubble Right (You) -->
+                    <div class="flex flex-col items-end space-y-1">
+                        <div class="max-w-[80%] bg-gradient-to-r from-brand-terracotta to-brand-rose text-white text-xs p-3 rounded-2xl rounded-tr-none shadow-md">
+                            Absolutely! "Husn" on repeat lately. How about you?
+                        </div>
+                        <span class="text-[9px] text-gray-500 pr-1">10:44 AM</span>
+                    </div>
+
+                    <!-- Message Bubble Left -->
+                    <div class="flex flex-col items-start space-y-1">
+                        <div id="chat-msg-2" class="max-w-[80%] bg-brand-darkCard text-gray-200 text-xs p-3 rounded-2xl rounded-tl-none border border-white/10">
+                            Same here! Also loved the sibling vouch on your profile, super wholesome haha.
+                        </div>
+                        <span class="text-[9px] text-gray-500 pl-1">10:45 AM</span>
+                    </div>
+
+                </div>
+
+                <!-- CHAT INPUT BOX -->
+                <div class="flex items-center space-x-2">
+                    <input id="chat-input" type="text" placeholder="Type a thoughtful message..." class="flex-1 bg-brand-darkCard border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-gold">
+                    <button onclick="sendChatMessage()" class="w-10 h-10 rounded-xl bg-brand-terracotta text-white flex items-center justify-center hover:bg-brand-rose transition">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION TABS -->
+        <nav class="sticky bottom-0 z-30 glass-panel border-t border-white/10 px-6 py-2 flex justify-around items-center">
+            <button onclick="switchTab('discovery')" id="nav-btn-discovery" class="flex flex-col items-center space-y-1 text-brand-gold">
+                <i class="fa-solid fa-heart text-base"></i>
+                <span class="text-[10px] font-medium">Discover</span>
+            </button>
+            <button onclick="switchTab('chat')" id="nav-btn-chat" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200">
+                <div class="relative">
+                    <i class="fa-solid fa-message text-base"></i>
+                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-brand-rose rounded-full"></span>
+                </div>
+                <span class="text-[10px] font-medium">Chats</span>
+            </button>
+            <button onclick="openContactVault()" class="flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-shield-halved text-base"></i>
+                <span class="text-[10px] font-medium">Vault</span>
+            </button>
+        </nav>
+
+        <!-- MODAL 1: 3-MINUTE AUDIO CALL SIMULATOR & EQ RADAR -->
+        <div id="call-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex flex-col items-center justify-between p-6">
+            <div class="w-full flex justify-between items-center text-xs text-gray-400">
+                <span class="bg-brand-rose/20 text-brand-rose border border-brand-rose/30 px-2.5 py-1 rounded-full font-mono">
+                    <i class="fa-solid fa-microphone mr-1"></i> Pre-Match Audio Call
+                </span>
+                <span id="call-timer" class="font-mono text-brand-gold font-bold text-sm">02:59</span>
+            </div>
+
+            <!-- Call User Profile & Waveforms -->
+            <div class="flex flex-col items-center space-y-4 my-auto">
+                <div class="relative">
+                    <img id="call-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80" class="w-28 h-28 rounded-full object-cover border-4 border-brand-terracotta shadow-2xl glow-accent">
+                    <div class="absolute -bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-2 border-black flex items-center justify-center text-[10px]">
+                        <i class="fa-solid fa-check text-black"></i>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <h3 id="call-user-name" class="text-xl font-bold">Riya</h3>
+                    <p class="text-xs text-gray-400">Speech Emotion Recognition Active</p>
+                </div>
+
+                <!-- Canvas Visualizer for Sound Waves -->
+                <canvas id="audio-canvas" width="280" height="60" class="rounded-lg bg-black/30 border border-white/10"></canvas>
+
+                <!-- Real-time EQ Vibe Alignment Badge -->
+                <div class="bg-gradient-to-r from-brand-terracotta/30 to-brand-rose/30 border border-brand-gold/40 px-4 py-2 rounded-2xl text-center">
+                    <div class="text-[10px] text-brand-gold font-bold uppercase tracking-widest">EQ Sentiment Analysis</div>
+                    <div class="text-lg font-extrabold text-white"><span id="eq-vibe-score">88%</span> Vibe Alignment</div>
+                    <div class="text-[11px] text-gray-300">High Vocal Chemistry & Warm Tone Detected</div>
+                </div>
+            </div>
+
+            <!-- Call Controls -->
+            <div class="flex items-center space-x-6 pb-4">
+                <button onclick="endVoiceCallSimulation()" class="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center text-xl shadow-lg hover:bg-red-700 transition">
+                    <i class="fa-solid fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL 2: SECURE CONTACT VAULT (PRIVACY-FIRST) -->
+        <div id="vault-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-end justify-center">
+            <div class="w-full max-w-md bg-brand-darkCard rounded-t-3xl border-t border-brand-gold/30 p-5 space-y-4 animate-slide-up">
+                <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-lock text-brand-gold text-lg"></i>
+                        <h3 class="font-bold text-base">Secure Contact Vault</h3>
+                    </div>
+                    <button onclick="closeContactVault()" class="text-gray-400 hover:text-white text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <p class="text-xs text-gray-300 leading-relaxed">
+                    Masked handles are only revealed when both users consent. Unmatching automatically revokes & wipes shared details from both viewports within 48h.
+                </p>
+
+                <!-- Vault Slot Item -->
+                <div class="space-y-2">
+                    <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-brands fa-whatsapp text-green-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs font-semibold">Phone Number</div>
+                                <div id="vault-phone" class="text-xs font-mono text-gray-400">+91 98•••• ••21</div>
+                            </div>
+                        </div>
+                        <button id="btn-reveal-phone" onclick="revealVaultDetail('phone')" class="px-2.5 py-1 bg-brand-terracotta text-white text-[11px] rounded font-medium hover:bg-brand-rose">
+                            Reveal
+                        </button>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-brands fa-instagram text-pink-400 text-lg"></i>
+                            <div>
+                                <div class="text-xs font-semibold">Instagram Handle</div>
+                                <div id="vault-insta" class="text-xs font-mono text-gray-400">@r••••_design</div>
+                            </div>
+                        </div>
+                        <button id="btn-reveal-insta" onclick="revealVaultDetail('insta')" class="px-2.5 py-1 bg-brand-terracotta text-white text-[11px] rounded font-medium hover:bg-brand-rose">
+                            Reveal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl text-[11px] text-red-300 flex items-center justify-between">
+                    <span>Simulate Unmatch Auto-Revocation:</span>
+                    <button onclick="simulateUnmatchRevoke()" class="px-2 py-1 bg-red-600 text-white rounded font-bold hover:bg-red-700">
+                        Trigger Unmatch
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 3: POST VIBE MODAL -->
+        <div id="vibe-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+            <div class="w-full max-w-sm bg-brand-darkCard rounded-2xl border border-white/15 p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm">Post to 24h Daily Vibe Board</h3>
+                    <button onclick="closeVibeModal()" class="text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <textarea id="vibe-input" rows="3" placeholder="What's your current social mood or evening plan? (e.g. Filter coffee & books at Higginbothams)" class="w-full bg-black/40 border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-brand-gold"></textarea>
+                <button onclick="submitNewVibe()" class="w-full py-2 bg-gradient-to-r from-brand-terracotta to-brand-rose text-white font-bold text-xs rounded-xl">
+                    Publish Vibe
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FLOATING DEV SIMULATION CONTROLLER (TESTBED FOR AI PERSONAS) -->
+    <div class="fixed bottom-3 right-3 z-40 bg-brand-darkCard border border-brand-gold/50 rounded-2xl p-3 shadow-2xl max-w-xs text-xs space-y-2">
+        <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+            <div class="flex items-center space-x-1.5 font-bold text-brand-gold">
+                <i class="fa-solid fa-vial"></i>
+                <span>Synthetic AI Controller</span>
+            </div>
+            <span class="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-mono">Dev Testbed</span>
+        </div>
+
+        <p class="text-[11px] text-gray-300">Switch AI personas to test social signals & chat without real users:</p>
+
+        <div class="grid grid-cols-3 gap-1.5">
+            <button onclick="loadPersona(0)" class="py-1 px-1.5 bg-brand-terracotta/30 border border-brand-terracotta rounded text-[10px] font-bold text-gray-200 hover:bg-brand-terracotta">
+                Riya (24)
+            </button>
+            <button onclick="loadPersona(1)" class="py-1 px-1.5 bg-white/10 border border-white/20 rounded text-[10px] font-bold text-gray-200 hover:bg-white/20">
+                Anand (27)
+            </button>
+            <button onclick="loadPersona(2)" class="py-1 px-1.5 bg-white/10 border border-white/20 rounded text-[10px] font-bold text-gray-200 hover:bg-white/20">
+                Sneha (25)
+            </button>
+        </div>
+
+        <div class="flex items-center justify-between pt-1 border-t border-white/10 text-[10px] text-gray-400">
+            <span>LLM Agent Sim: <strong class="text-green-400">Active</strong></span>
+            <button onclick="triggerAiReply()" class="text-brand-gold hover:underline font-semibold">
+                <i class="fa-solid fa-robot mr-1"></i>Force AI Reply
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // SYNTHETIC AI PERSONAS DATASET
+        const personas = [
+            {
+                name: "Riya",
+                age: 24,
+                intent: "💍 Marriage-Minded",
+                locationJob: "UX Designer • Chennai",
+                img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80",
+                vibeScore: "89%",
+                vouchText: "Vouched by Priya (Sister): 'Riya is fiercely kind, loves dogs, and is looking for a long-term partner who appreciates deep late-night chats.'",
+                tags: ["🎵 Anuv Jain", "☕ Filter Coffee", "📚 Murakami", "🌱 Vegetarian"],
+                phone: "+91 98401 22921",
+                insta: "@riya_ux_design",
+                msgs: [
+                    "Hey! I noticed your vibe post about lo-fi music. Big Anuv Jain fan? 🎵",
+                    "Same here! Also loved the sibling vouch on your profile, super wholesome haha."
+                ]
+            },
+            {
+                name: "Anand",
+                age: 27,
+                intent: "🌱 Serious Relationship",
+                locationJob: "Product Manager • Bengaluru",
+                img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80",
+                vibeScore: "93%",
+                vouchText: "Vouched by Vikram (Best Friend): 'Anand never misses a weekend hike and cooks the absolute best biryani. High intent, total sweetheart.'",
+                tags: ["⛰️ Trekking", "🍛 Home Cook", "🎧 Indie Rock", "🐕 Dog Parent"],
+                phone: "+91 99620 44102",
+                insta: "@anand_runs",
+                msgs: [
+                    "Filter coffee > Cappuccino. Prove me wrong! ☕",
+                    "Haha glad you agree! Are you free for a quick 3-min audio call later tonight?"
+                ]
+            },
+            {
+                name: "Sneha",
+                age: 25,
+                intent: "✨ Intentional Dating",
+                locationJob: "Architect • Hyderabad",
+                img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80",
+                vibeScore: "84%",
+                vouchText: "Vouched by Meera (Cousin): 'Sneha is incredibly creative, passionate about vintage architecture, and looking for someone genuinely authentic.'",
+                tags: ["🎨 Art History", "🏛️ Architecture", "📷 Analog Photography"],
+                phone: "+91 97110 55819",
+                insta: "@sneha_arch",
+                msgs: [
+                    "Loved your profile note on pottery workshops!",
+                    "Would love to check out that exhibition together sometime."
+                ]
+            }
+        ];
+
+        let currentPersonaIndex = 0;
+        let callTimerInterval = null;
+        let audioAnimationId = null;
+
+        // TAB SWITCHING LOGIC
+        function switchTab(tab) {
+            document.getElementById('tab-discovery').classList.add('hidden');
+            document.getElementById('tab-chat').classList.add('hidden');
+            document.getElementById('nav-btn-discovery').className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200";
+            document.getElementById('nav-btn-chat').className = "flex flex-col items-center space-y-1 text-gray-400 hover:text-gray-200";
+
+            if(tab === 'discovery') {
+                document.getElementById('tab-discovery').classList.remove('hidden');
+                document.getElementById('nav-btn-discovery').className = "flex flex-col items-center space-y-1 text-brand-gold";
+            } else if(tab === 'chat') {
+                document.getElementById('tab-chat').classList.remove('hidden');
+                document.getElementById('nav-btn-chat').className = "flex flex-col items-center space-y-1 text-brand-gold";
+            }
+        }
+
+        // DEV CONTROLLER: LOAD SYNTHETIC PERSONA
+        function loadPersona(index) {
+            currentPersonaIndex = index;
+            const p = personas[index];
+
+            // Update Discovery Profile
+            document.getElementById('profile-img').src = p.img;
+            document.getElementById('profile-vibe-score').innerText = p.vibeScore;
+            document.getElementById('profile-name-age').innerText = `${p.name}, ${p.age}`;
+            document.getElementById('profile-intent-badge').innerText = p.intent;
+            document.getElementById('profile-location-job').innerHTML = `<i class="fa-solid fa-location-dot text-brand-rose mr-1"></i> ${p.locationJob}`;
+            document.getElementById('profile-vouch-text').innerText = p.vouchText;
+
+            // Render Tags
+            const tagsContainer = document.getElementById('profile-tags');
+            tagsContainer.innerHTML = p.tags.map(t => `<span class="text-xs bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-full">${t}</span>`).join('');
+
+            // Update Chat View
+            document.getElementById('chat-header-avatar').src = p.img;
+            document.getElementById('chat-header-name').innerText = p.name;
+            document.getElementById('call-avatar').src = p.img;
+            document.getElementById('call-user-name').innerText = p.name;
+
+            // Reset Vault Details
+            document.getElementById('vault-phone').innerText = "+91 " + p.phone.substring(4,7) + "•••• ••" + p.phone.slice(-2);
+            document.getElementById('vault-insta').innerText = "@" + p.insta.substring(1,3) + "••••_dev";
+            document.getElementById('btn-reveal-phone').innerText = "Reveal";
+            document.getElementById('btn-reveal-insta').innerText = "Reveal";
+
+            // Update Messages
+            document.getElementById('chat-msg-1').innerText = p.msgs[0];
+            document.getElementById('chat-msg-2').innerText = p.msgs[1];
+        }
+
+        // CHAT SIMULATION LOGIC
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            const chatBox = document.getElementById('chat-box');
+
+            // Append User Msg
+            const userMsgHtml = `
+                <div class="flex flex-col items-end space-y-1">
+                    <div class="max-w-[80%] bg-gradient-to-r from-brand-terracotta to-brand-rose text-white text-xs p-3 rounded-2xl rounded-tr-none shadow-md">
+                        ${val}
+                    </div>
+                    <span class="text-[9px] text-gray-500 pr-1">Just now</span>
+                </div>
+            `;
+            chatBox.insertAdjacentHTML('beforeend', userMsgHtml);
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Trigger Automated AI Reply after 1.5s
+            setTimeout(() => {
+                triggerAiReply();
+            }, 1200);
+        }
+
+        function triggerAiReply() {
+            const p = personas[currentPersonaIndex];
+            const chatBox = document.getElementById('chat-box');
+            const replies = [
+                `That sounds amazing! I totally agree regarding ${p.tags[0]}.`,
+                "Haha you have such great energy! Ready to unlock the Contact Vault or do a quick audio call?",
+                "That's so thoughtful. Loved reading your response!"
+            ];
+            const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+            const aiMsgHtml = `
+                <div class="flex flex-col items-start space-y-1">
+                    <div class="max-w-[80%] bg-brand-darkCard text-gray-200 text-xs p-3 rounded-2xl rounded-tl-none border border-white/10">
+                        ${randomReply}
+                    </div>
+                    <span class="text-[9px] text-gray-500 pl-1">Just now</span>
+                </div>
+            `;
+            chatBox.insertAdjacentHTML('beforeend', aiMsgHtml);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 3-MIN AUDIO CALL SIMULATOR & CANVAS WAVEFORM
+        function startVoiceCallSimulation() {
+            document.getElementById('call-modal').classList.remove('hidden');
+            let timeRemaining = 179; // 2:59
+            const timerEl = document.getElementById('call-timer');
+
+            clearInterval(callTimerInterval);
+            callTimerInterval = setInterval(() => {
+                const mins = Math.floor(timeRemaining / 60);
+                const secs = timeRemaining % 60;
+                timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                timeRemaining--;
+                if(timeRemaining < 0) endVoiceCallSimulation();
+            }, 1000);
+
+            startAudioVisualizer();
+        }
+
+        function endVoiceCallSimulation() {
+            clearInterval(callTimerInterval);
+            cancelAnimationFrame(audioAnimationId);
+            document.getElementById('call-modal').classList.add('hidden');
+        }
+
+        function startAudioVisualizer() {
+            const canvas = document.getElementById('audio-canvas');
+            const ctx = canvas.getContext('2d');
+            let step = 0;
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#E5A93C";
+
+                for(let i = 0; i < 30; i++) {
+                    const height = Math.sin(step + i * 0.3) * 20 + 25;
+                    const x = i * 9 + 10;
+                    ctx.fillRect(x, (canvas.height - height) / 2, 4, height);
+                }
+                step += 0.15;
+                audioAnimationId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // CONTACT VAULT LOGIC
+        function openContactVault() {
+            document.getElementById('vault-modal').classList.remove('hidden');
+        }
+
+        function closeContactVault() {
+            document.getElementById('vault-modal').classList.add('hidden');
+        }
+
+        function revealVaultDetail(type) {
+            const p = personas[currentPersonaIndex];
+            if(type === 'phone') {
+                document.getElementById('vault-phone').innerText = p.phone;
+                document.getElementById('btn-reveal-phone').innerText = "Shared ✓";
+            } else if(type === 'insta') {
+                document.getElementById('vault-insta').innerText = p.insta;
+                document.getElementById('btn-reveal-insta').innerText = "Shared ✓";
+            }
+        }
+
+        function simulateUnmatchRevoke() {
+            document.getElementById('vault-phone').innerText = "[AUTO-REVOKED & WIPED]";
+            document.getElementById('vault-insta').innerText = "[AUTO-REVOKED & WIPED]";
+            document.getElementById('vault-phone').className = "text-xs font-mono text-red-400 font-bold";
+            document.getElementById('vault-insta').className = "text-xs font-mono text-red-400 font-bold";
+            alert("Security Protocol: Match unlinked. Contact vault details automatically revoked and wiped from both viewports.");
+        }
+
+        // VIBE BOARD MODAL LOGIC
+        function openVibeModal() {
+            document.getElementById('vibe-modal').classList.remove('hidden');
+        }
+        function closeVibeModal() {
+            document.getElementById('vibe-modal').classList.add('hidden');
+        }
+        function submitNewVibe() {
+            const val = document.getElementById('vibe-input').value.trim();
+            if(val) {
+                document.getElementById('user-vibe-text').innerText = `"${val}"`;
+                closeVibeModal();
+            }
+        }
+
+        function toggleAudioPreview(btn) {
+            const icon = btn.querySelector('i');
+            if(icon.classList.contains('fa-play')) {
+                icon.classList.remove('fa-play');
+                icon.classList.add('fa-pause');
+            } else {
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+            }
+        }
+    </script>
+</body>
+</html>
